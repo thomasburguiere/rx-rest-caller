@@ -11,45 +11,44 @@ public enum HttpMethod: String {
     case PATCH = "PATCH"
 }
 
+fileprivate let responseDataMapper = { (responseData: ResponseWithData) in
+    return try JSONSerialization.jsonObject(with: responseData.data!) as! Dictionary<String, Any>
+}
+
 open class RxRestCaller {
     
     private let session: URLSession = URLSession(configuration: URLSessionConfiguration.default)
         
     public init() {}
     
-    public func call(urlRequest: URLRequest) -> Observable<Dictionary<String, Any>> {
-        return callJsonRESTAsync(urlRequest: urlRequest)
+    open func callJson(urlRequest: URLRequest) -> Observable<Dictionary<String, Any>> {
+        return call(urlRequest: urlRequest)
+            .map(responseDataMapper)
     }
     
     open func get(url: String) -> Observable<Dictionary<String, Any>>{
-        return callJsonRESTAsync(urlRequest: buildRequest(url: url, method: .GET))
+        return call(urlRequest: buildRequest(url: url, method: .GET))
+            .map(responseDataMapper)
     }
     
     @available(*, deprecated, message: "use get(url:) instead")
     open func callJsonRESTAsync(url: String) -> Observable<Dictionary<String, Any>> {
-        return callJsonRESTAsync(urlRequest: buildRequest(url: url, method: .GET))
+        return call(urlRequest: buildRequest(url: url, method: .GET))
+            .map(responseDataMapper)
     }
     
-    private func callJsonRESTAsync(urlRequest: URLRequest) -> Observable<Dictionary<String, Any>> {
+    open func call(urlRequest: URLRequest) -> Observable<ResponseWithData> {
         return Observable.create({ observer in
             let task: URLSessionDataTask =
                 self.session.dataTask(with: urlRequest) { (data: Data?, response: URLResponse?, error: Error?) in
-                    if let data: Data = data {
-                        do {
-                            // Convert the data to JSON
-                            let jsonSerialized = try JSONSerialization.jsonObject(with: data) as? Dictionary<String, Any>
-                            observer.onNext(jsonSerialized!)
-                            observer.onCompleted()
-                        } catch let error as NSError {
-                            observer.onError(error)
-                        }
+                    if let response = response  {
+                        observer.onNext(ResponseWithData(data: data, response: response))
+                        observer.onCompleted()
                     } else if let error = error {
                         observer.onError(error)
                     }
             }
-            
             task.resume()
-            
             return Disposables.create(with: {
                 task.cancel()
             })
@@ -63,4 +62,9 @@ open class RxRestCaller {
         request.httpMethod = method.rawValue
         return request
     }
+}
+
+public struct ResponseWithData {
+    public let data: Data?
+    public let response: URLResponse
 }
