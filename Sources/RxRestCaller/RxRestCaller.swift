@@ -1,15 +1,6 @@
 import Foundation
 import RxSwift
 
-public protocol RxRestCaller {
-    func get(url: String) -> Observable<Dictionary<String, Any>>
-    
-    func call(urlRequest: URLRequest) -> Observable<Dictionary<String, Any>>
-    
-    @available(*, deprecated)
-    func callJsonRESTAsync(url: String) -> Observable<Dictionary<String, Any>>
-}
-
 public enum HttpMethod: String {
     case GET = "GET"
     case POST = "POST"
@@ -20,7 +11,7 @@ public enum HttpMethod: String {
     case PATCH = "PATCH"
 }
 
-open class DefaultRxRestCaller: RxRestCaller {
+open class RxRestCaller {
     
     private let session: URLSession = URLSession(configuration: URLSessionConfiguration.default)
         
@@ -34,7 +25,7 @@ open class DefaultRxRestCaller: RxRestCaller {
         return callJsonRESTAsync(urlRequest: buildRequest(url: url, method: .GET))
     }
     
-    @available(*, deprecated)
+    @available(*, deprecated, message: "use get(url:) instead")
     open func callJsonRESTAsync(url: String) -> Observable<Dictionary<String, Any>> {
         return callJsonRESTAsync(urlRequest: buildRequest(url: url, method: .GET))
     }
