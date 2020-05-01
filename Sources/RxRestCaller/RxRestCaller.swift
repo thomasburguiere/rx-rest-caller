@@ -1,7 +1,12 @@
 import Foundation
 import RxSwift
 
-open class RxRestCaller {
+public protocol RxRestCaller {
+    func callJsonRESTAsync(url: String) -> Observable<Dictionary<String, Any>>
+}
+
+
+open class DefaultRxRestCaller: RxRestCaller {
     
     public init() {}
     
