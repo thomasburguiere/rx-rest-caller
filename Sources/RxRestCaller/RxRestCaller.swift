@@ -1,13 +1,13 @@
 import Foundation
 import RxSwift
 
-public class RxRestCaller {
+open class RxRestCaller {
     
     public init() {}
     
     private let session: URLSession = URLSession(configuration: URLSessionConfiguration.default)
     
-    public func callJsonRESTAsync(url: String) -> Observable<Dictionary<String, Any>> {
+    open func callJsonRESTAsync(url: String) -> Observable<Dictionary<String, Any>> {
         let url = URL(string: url)
         
         return Observable.create({ observer in
