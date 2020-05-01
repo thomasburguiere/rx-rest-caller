@@ -7,5 +7,5 @@ A simple library (backed by URLSession)  that allows to do REST calls and return
 ```swift
 let caller: RxRestCaller
 
-let responsePayload:Observable<Dictionary<String, Any>> =  caller.callJsonRESTAsync("https://myapi/")
+let responsePayload:Observable<Dictionary<String, Any>> =  caller.get("https://myapi/")
 ```
