@@ -1,7 +1,7 @@
 import Foundation
 import RxSwift
 
-public enum HttpMethod: String {
+private enum HttpMethod: String {
     case GET = "GET"
     case POST = "POST"
     case PUT = "PUT"
@@ -21,22 +21,38 @@ open class RxRestCaller {
         
     public init() {}
     
+    /**
+        calls the provided `URLRequest` and returns an `Observable<Dictionary<String, Any>>` representing
+        the response's json payload (assumed to be an object, not an array)
+    */
     open func callJson(urlRequest: URLRequest) -> Observable<Dictionary<String, Any>> {
         return call(urlRequest: urlRequest)
             .map(responseDataMapper)
     }
     
+    /**
+        calls the provided `url` with `GET` method and returns an `Observable<Dictionary<String, Any>>` representing
+        the response's json payload (assumed to be an object, not an array)
+    */
     open func get(url: String) -> Observable<Dictionary<String, Any>>{
         return call(urlRequest: buildRequest(url: url, method: .GET))
             .map(responseDataMapper)
     }
     
+    /**
+        calls the provided `url` with `GET` method and returns an `Observable<Dictionary<String, Any>>` representing
+        the response's json payload (assumed to be an object, not an array)
+    */
     @available(*, deprecated, message: "use get(url:) instead")
     open func callJsonRESTAsync(url: String) -> Observable<Dictionary<String, Any>> {
         return call(urlRequest: buildRequest(url: url, method: .GET))
             .map(responseDataMapper)
     }
     
+    /**
+        calls the provided `URLRequest` and returns an `Observable<ResponseWithData>` representing
+        the response and its data
+    */
     open func call(urlRequest: URLRequest) -> Observable<ResponseWithData> {
         return Observable.create({ observer in
             let task: URLSessionDataTask =
@@ -64,6 +80,7 @@ open class RxRestCaller {
     }
 }
 
+/// representation of the result of `URLSessionDataTask`, contains `Data?` and `URLResponse`
 public struct ResponseWithData {
     public let data: Data?
     public let response: URLResponse
