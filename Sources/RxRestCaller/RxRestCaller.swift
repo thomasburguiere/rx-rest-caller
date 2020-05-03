@@ -11,7 +11,7 @@ private enum HttpMethod: String {
     case PATCH = "PATCH"
 }
 
-fileprivate let responseDataMapper = { (responseData: ResponseWithData) in
+fileprivate let responseDataObjectMapper = { (responseData: ResponseWithData) in
     return try JSONSerialization.jsonObject(with: responseData.data!) as! Dictionary<String, Any>
 }
 
@@ -27,7 +27,7 @@ open class RxRestCaller {
     */
     open func callJson(urlRequest: URLRequest) -> Observable<Dictionary<String, Any>> {
         return call(urlRequest: urlRequest)
-            .map(responseDataMapper)
+            .map(responseDataObjectMapper)
     }
     
     /**
@@ -36,7 +36,7 @@ open class RxRestCaller {
     */
     open func get(url: String) -> Observable<Dictionary<String, Any>>{
         return call(urlRequest: buildRequest(url: url, method: .GET))
-            .map(responseDataMapper)
+            .map(responseDataObjectMapper)
     }
     
     /**
@@ -46,7 +46,16 @@ open class RxRestCaller {
     @available(*, deprecated, message: "use get(url:) instead")
     open func callJsonRESTAsync(url: String) -> Observable<Dictionary<String, Any>> {
         return call(urlRequest: buildRequest(url: url, method: .GET))
-            .map(responseDataMapper)
+            .map(responseDataObjectMapper)
+    }
+    
+    
+    open func call<T: Decodable>(urlRequest: URLRequest, returnType: T.Type) -> Observable<ResponseWithTypedData<T>> {
+        return call(urlRequest: urlRequest)
+            .map {responseWithRawData in
+                let typedData: T? = try? JSONDecoder().decode(returnType, from: responseWithRawData.data!)
+                return ResponseWithTypedData(data: typedData, response: responseWithRawData.response)
+        }
     }
     
     /**
@@ -83,5 +92,10 @@ open class RxRestCaller {
 /// representation of the result of `URLSessionDataTask`, contains `Data?` and `URLResponse`
 public struct ResponseWithData {
     public let data: Data?
+    public let response: URLResponse
+}
+
+public struct ResponseWithTypedData<T> {
+    public let data: T?
     public let response: URLResponse
 }

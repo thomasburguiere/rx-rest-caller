@@ -64,6 +64,33 @@ final class RxRestCallerTests: XCTestCase {
         
         self.wait(for: [ex], timeout: 10.0)
     }
+    
+    func test_call_with_type_works() {
+        let service = RxRestCaller()
+        
+        var request = URLRequest(url: URL(string: "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY")!)
+        request.httpMethod = "GET"
+        
+        let expectation = self.expectation(description: "Fetching succeeds")
+        _ = service.call(urlRequest: request, returnType: ResponseType.self).subscribe(
+            onNext: {resp in
+                
+                XCTAssertNotNil(resp)
+                XCTAssertNotNil(resp.data!.explanation)
+                expectation.fulfill()
+        },
+            onError: { err in XCTFail(err.localizedDescription) },
+            onCompleted: nil,
+            onDisposed: nil
+        )
+        
+        
+        self.wait(for: [expectation], timeout: 10.0)
+    }
+    
+    private struct ResponseType: Codable {
+        var explanation: String
+    }
 
     static var allTests = [
         ("test_call_works", test_get_works),
