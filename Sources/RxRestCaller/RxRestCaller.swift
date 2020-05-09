@@ -11,10 +11,6 @@ private enum HttpMethod: String {
     case PATCH = "PATCH"
 }
 
-fileprivate let responseDataObjectMapper = { (responseData: ResponseWithData) in
-    return try JSONSerialization.jsonObject(with: responseData.data!) as! Dictionary<String, Any>
-}
-
 open class RxRestCaller {
 
     private let session: URLSession = URLSession(configuration: URLSessionConfiguration.default)
@@ -24,7 +20,7 @@ open class RxRestCaller {
 
     /**
         calls the provided `URLRequest` and returns an `Observable<ResponseWithTypedData<T>>` representing
-        the response and its data
+        the response and its typed data
     */
     open func call<T: Decodable>(urlRequest: URLRequest, returnType: T.Type) -> Observable<ResponseWithTypedData<T>> {
         return call(urlRequest: urlRequest)
@@ -71,7 +67,11 @@ open class RxRestCaller {
         });
     }
 
-    private func call(urlRequest: URLRequest) -> Observable<ResponseWithData> {
+    /**
+        calls the provided `URLRequest` and returns an `Observable<ResponseWithTypedData<T>>` representing
+        the response and its raw data
+    */
+    open func call(urlRequest: URLRequest) -> Observable<ResponseWithData> {
         return Observable.create({ observer in
             let task: URLSessionDataTask =
                     self.session.dataTask(with: urlRequest) { (data: Data?, response: URLResponse?, error: Error?) in
