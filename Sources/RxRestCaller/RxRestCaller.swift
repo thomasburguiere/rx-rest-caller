@@ -68,7 +68,7 @@ open class RxRestCaller {
     }
 
     /**
-        calls the provided `URLRequest` and returns an `Observable<ResponseWithTypedData<T>>` representing
+        calls the provided `URLRequest` and returns an `Observable<ResponseWithData>` representing
         the response and its raw data
     */
     open func call(urlRequest: URLRequest) -> Observable<ResponseWithData> {
@@ -82,6 +82,49 @@ open class RxRestCaller {
                             observer.onError(error)
                         }
                     }
+            task.resume()
+            return Disposables.create(with: {
+                task.cancel()
+            })
+        })
+    }
+
+    /**
+    calls the provided `URLRequest` and returns an `Observable<Data>` representing
+    the responses' raw data. Errors (connection error, 404, 500, etc...) will returned in the onError event of the
+    Observable. If the response contains no data, the Observable will just complete
+    */
+    open func callForData(urlRequest: URLRequest) -> Observable<Data> {
+        return Observable.create({ observer in
+            let task: URLSessionDataTask = self.session.dataTask(with: urlRequest) { (data: Data?, response: URLResponse?, error: Error?) in
+                guard error == nil else {
+                    observer.onError(error!)
+                    return
+                }
+                
+                guard response != nil else {
+                    observer.onError(fatalError("response is missing"))
+                    return
+                }
+
+                guard response!.isKind(of: HTTPURLResponse.self) else {
+                    observer.onError(fatalError("response is not of type HTTPURLResponse"))
+                    return
+                }
+
+                let httpResponse = response as! HTTPURLResponse
+
+                guard httpResponse.statusCode < 400 else {
+                    observer.onError(RxRestCallerError("response has status \(httpResponse.statusCode)"))
+                    return
+                }
+                
+                if data != nil && data!.count > 0 {
+                    observer.onNext(data!)
+                }
+                
+                observer.onCompleted()
+            }
             task.resume()
             return Disposables.create(with: {
                 task.cancel()
