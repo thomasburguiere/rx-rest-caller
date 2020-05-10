@@ -14,6 +14,7 @@ private enum HttpMethod: String {
 open class RxRestCaller {
 
     private let session: URLSession = URLSession(configuration: URLSessionConfiguration.default)
+    private let jsonDecoder = JSONDecoder()
 
     public init() {
     }
@@ -25,7 +26,7 @@ open class RxRestCaller {
     open func call<T: Decodable>(urlRequest: URLRequest, returnType: T.Type) -> Observable<ResponseWithTypedData<T>> {
         return call(urlRequest: urlRequest)
                 .map { responseWithRawData in
-                    let typedData: T? = try? JSONDecoder().decode(returnType, from: responseWithRawData.data!)
+                    let typedData: T? = try? self.jsonDecoder.decode(returnType, from: responseWithRawData.data!)
                     return ResponseWithTypedData(data: typedData, response: responseWithRawData.response)
                 }
     }
@@ -56,7 +57,7 @@ open class RxRestCaller {
                     return
                 }
 
-                let typedData: T? = try? JSONDecoder().decode(returnType, from: data!)
+                let typedData: T? = try? self.jsonDecoder.decode(returnType, from: data!)
                 observer.onNext(typedData!)
                 observer.onCompleted()
             }
