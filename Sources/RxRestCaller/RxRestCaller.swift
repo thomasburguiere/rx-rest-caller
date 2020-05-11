@@ -13,10 +13,11 @@ private enum HttpMethod: String {
 
 open class RxRestCaller {
 
-    private let session: URLSession = URLSession(configuration: URLSessionConfiguration.default)
+    private let session: URLSession
     private let jsonDecoder = JSONDecoder()
 
-    public init() {
+    public init(session: URLSession? = URLSession(configuration: URLSessionConfiguration.default)) {
+        self.session = session!
     }
 
     /**
@@ -58,8 +59,8 @@ open class RxRestCaller {
                 }
 
                 let typedData: T? = try? self.jsonDecoder.decode(returnType, from: data!)
-                observer.onNext(typedData!)
-                observer.onCompleted()
+                observer.on(.next(typedData!))
+                observer.on(.completed)
             }
             task.resume()
             return Disposables.create(with: {
@@ -102,7 +103,7 @@ open class RxRestCaller {
                     observer.onError(error!)
                     return
                 }
-                
+
                 guard response != nil else {
                     observer.onError(fatalError("response is missing"))
                     return
@@ -119,11 +120,11 @@ open class RxRestCaller {
                     observer.onError(RxRestCallerError("response has status \(httpResponse.statusCode)"))
                     return
                 }
-                
+
                 if data != nil && data!.count > 0 {
                     observer.onNext(data!)
                 }
-                
+
                 observer.onCompleted()
             }
             task.resume()
